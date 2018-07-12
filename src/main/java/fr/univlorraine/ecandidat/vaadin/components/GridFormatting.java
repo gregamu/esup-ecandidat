@@ -113,22 +113,19 @@ public class GridFormatting<T> extends Grid {
 	 * @param sortProperty
 	 */
 	public void initColumn(final String[] fieldsOrder, final String prefixeProperty, final String sortProperty) {
-		List<SortOrder> listSortOrder = new ArrayList<>();
-		listSortOrder.add(new SortOrder(sortProperty, SortDirection.ASCENDING));
-		initColumn(fieldsOrder, fieldsOrder, fieldsOrder, prefixeProperty, listSortOrder, null);
+		initColumn(fieldsOrder, fieldsOrder, fieldsOrder, prefixeProperty, sortProperty, SortDirection.ASCENDING, null);
 	}
 
 	/** Ajoute les NestedContainerProperty Nettoie les colonnes non visibles Cache
 	 * automatiquement les colonnes Trie les colonnes
 	 *
-	 * @param fields
-	 * @param fieldsVisible
 	 * @param fieldsOrder
 	 * @param prefixeProperty
-	 * @param sortColonne
+	 * @param sortProperty
+	 * @param sortDirection
 	 * @param listeCbFilter
 	 */
-	public void initColumn(final String[] fields, final String[] fieldsVisible, final String[] fieldsOrder, final String prefixeProperty, final List<SortOrder> sortColonne,
+	public void initColumn(final String[] fields, final String[] fieldsVisible, final String[] fieldsOrder, final String prefixeProperty, final String sortProperty, final SortDirection sortDirection,
 			final List<ComboBoxFilterPresentation> listeCbFilter) {
 		/* On ajoute les nested property */
 		BeanItemContainer<?> container = (BeanItemContainer<?>) getContainerDataSource();
@@ -188,8 +185,7 @@ public class GridFormatting<T> extends Grid {
 
 		/* On met l'ordre des colonnes */
 		setColumnOrder((Object[]) (fieldsOrder));
-		listSortOrder.clear();
-		listSortOrder.addAll(sortColonne);
+		listSortOrder.add(new SortOrder(sortProperty, sortDirection));
 		sort();
 
 		/* Initialisation des ComboBox */
@@ -224,6 +220,7 @@ public class GridFormatting<T> extends Grid {
 			}
 			return container.getItem(itemId).getBean();
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new UIException();
 		}
 	}
@@ -305,13 +302,6 @@ public class GridFormatting<T> extends Grid {
 	public void removeAndAddAll(final Collection<? extends T> list) {
 		removeAll();
 		addItems(list);
-	}
-
-	/** Trie la table */
-	public void sort(final List<SortOrder> listSortOrderS) {
-		this.listSortOrder.clear();
-		this.listSortOrder.addAll(listSortOrderS);
-		sort();
 	}
 
 	/** Trie la table */
@@ -657,6 +647,7 @@ public class GridFormatting<T> extends Grid {
 	private void fireFilterListener() {
 		if (filterListener != null) {
 			filterListener.filter();
+			// deselectAll();
 		}
 	}
 

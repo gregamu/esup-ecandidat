@@ -16,7 +16,6 @@
  */
 package fr.univlorraine.ecandidat.repositories;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -71,8 +70,4 @@ public interface CandidatureRepository extends JpaRepository<Candidature, Intege
 	public Long countByTag(Tag tag);
 
 	public Long countByFormation(Formation formation);
-
-	/* Liste de candidaures a desister automatiquement */
-	List<Candidature> findByCandidatCompteMinimaCampagneCodCampAndTemAcceptCandIsNullAndDatAnnulCandIsNullAndFormationDatConfirmFormIsNotNullAndFormationDatConfirmFormBefore(String codCamp,
-			LocalDate now);
 }

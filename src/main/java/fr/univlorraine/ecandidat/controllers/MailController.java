@@ -16,7 +16,6 @@
  */
 package fr.univlorraine.ecandidat.controllers;
 
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
@@ -95,8 +94,6 @@ public class MailController {
 	private transient CacheController cacheController;
 	@Resource
 	private transient ParametreController parametreController;
-	@Resource
-	private transient CandidatureController candidatureController;
 	@Resource
 	private transient MailRepository mailRepository;
 	@Resource
@@ -274,16 +271,14 @@ public class MailController {
 		if (formation.getDatPubliForm() != null) {
 			formationMailBean.setDatPubli(formatterDate.format(formation.getDatPubliForm()));
 		}
-		LocalDate dateRetour = candidatureController.getDateRetourCandidat(candidature);
-		if (dateRetour != null) {
-			formationMailBean.setDatRetour(formatterDate.format(dateRetour));
+		if (formation.getDatRetourForm() != null) {
+			formationMailBean.setDatRetour(formatterDate.format(formation.getDatRetourForm()));
 		}
 		if (formation.getDatJuryForm() != null) {
 			formationMailBean.setDatJury(formatterDate.format(formation.getDatJuryForm()));
 		}
-		LocalDate dateConfirm = candidatureController.getDateConfirmCandidat(candidature);
-		if (dateConfirm != null) {
-			formationMailBean.setDatConfirm(formatterDate.format(dateConfirm));
+		if (formation.getDatConfirmForm() != null) {
+			formationMailBean.setDatConfirm(formatterDate.format(formation.getDatConfirmForm()));
 		}
 		if (formation.getDatDebDepotForm() != null) {
 			formationMailBean.setDatDebDepot(formatterDate.format(formation.getDatDebDepotForm()));
@@ -499,9 +494,6 @@ public class MailController {
 		} else if (codMail != null && codMail.equals(NomenclatureUtils.MAIL_CANDIDATURE_MODIF_COD_OPI)) {
 			/* Mail de modification d'OPI */
 			return NomenclatureUtils.MAIL_CANDIDAT_GEN_VAR + ";" + NomenclatureUtils.MAIL_CANDIDATURE_MODIF_COD_OPI_VAR;
-		} else if (codMail != null && codMail.equals(NomenclatureUtils.MAIL_CANDIDATURE_RELANCE_FORMULAIRE)) {
-			/* Mail de modification d'OPI */
-			return NomenclatureUtils.MAIL_CANDIDATURE_RELANCE_FORMULAIRE_VAR;
 		} else if (mail.getTypeAvis() != null) {
 			/* Mail de type de decisoion */
 			TypeAvis type = mail.getTypeAvis();

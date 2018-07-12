@@ -25,7 +25,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -334,6 +333,24 @@ public class CandidatureController {
 		}
 	}
 
+	/*
+	 * public void testCandidature(Candidat candidat, Integer idFormation){
+	 * Candidature candidature = new Candidature("Test",candidat,
+	 * formationRepository.findOne(idFormation),tableRefController.
+	 * getTypeTraitementAccesControle(),
+	 * tableRefController.getTypeStatutEnAttente(), false, false);
+	 * candidature.setCandidat(candidat); MethodUtils.validateBean(candidature,
+	 * logger); candidature = candidatureRepository.save(candidature); TypeDecision
+	 * ty = typeDecisionRepository.findOne(1); TypeDecisionCandidature
+	 * typeDecisionCandidature = new TypeDecisionCandidature(candidature, ty);
+	 * typeDecisionCandidature.setTemValidTypeDecCand(true);
+	 * typeDecisionCandidature.setUserCreTypeDecCand("Test");
+	 * typeDecisionCandidature.setTemAppelTypeDecCand(false);
+	 * MethodUtils.validateBean(typeDecisionCandidature,
+	 * LoggerFactory.getLogger(this.getClass()));
+	 * typeDecisionCandidatureRepository.save(typeDecisionCandidature); }
+	 */
+
 	/** La candidature est faite par un gestionnaire
 	 *
 	 * @param candidat
@@ -629,38 +646,6 @@ public class CandidatureController {
 	}
 
 	/** @param candidature
-	 * @return la date de confirmation d'un candidat */
-	public LocalDate getDateConfirmCandidat(final LocalDate datConfirmForm, final LocalDate datNewConfirmCand) {
-		if (datConfirmForm != null && datNewConfirmCand != null && (datNewConfirmCand.isAfter(datConfirmForm)
-				|| datNewConfirmCand.isEqual(datConfirmForm))) {
-			return datNewConfirmCand;
-		}
-		return datConfirmForm;
-	}
-
-	/** @param candidature
-	 * @return la date de confirmation d'un candidat */
-	public LocalDate getDateConfirmCandidat(final Candidature candidature) {
-		return getDateConfirmCandidat(candidature.getFormation().getDatConfirmForm(), candidature.getDatNewConfirmCand());
-	}
-
-	/** @param candidature
-	 * @return la date de retour d'un candidat */
-	public LocalDate getDateRetourCandidat(final LocalDate datRetourForm, final LocalDate datNewRetourCand) {
-		if (datNewRetourCand != null && (datNewRetourCand.isAfter(datRetourForm)
-				|| datNewRetourCand.isEqual(datRetourForm))) {
-			return datNewRetourCand;
-		}
-		return datRetourForm;
-	}
-
-	/** @param candidature
-	 * @return la date de retour d'un candidat */
-	public LocalDate getDateRetourCandidat(final Candidature candidature) {
-		return getDateRetourCandidat(candidature.getFormation().getDatRetourForm(), candidature.getDatNewRetourCand());
-	}
-
-	/** @param candidature
 	 * @param isCandidatOfCandidature
 	 * @return les infos de dates de la candidature */
 	public List<SimpleTablePresentation> getInformationsDateCandidature(final Candidature candidature,
@@ -669,8 +654,8 @@ public class CandidatureController {
 		Formation formation = candidature.getFormation();
 		/* On recupere les dates de la formation */
 		LocalDate datAnalyseForm = formation.getDatAnalyseForm();
-		LocalDate datRetourForm = getDateRetourCandidat(candidature);
-		LocalDate datConfirmForm = getDateConfirmCandidat(candidature);
+		LocalDate datRetourForm = formation.getDatRetourForm();
+		LocalDate datConfirmForm = formation.getDatConfirmForm();
 		LocalDate datJuryForm = formation.getDatJuryForm();
 		LocalDate datPubliForm = formation.getDatPubliForm();
 
@@ -683,7 +668,7 @@ public class CandidatureController {
 				&& candidature.getDatRetourForm() != null) {
 			datAnalyseForm = candidature.getDatAnalyseForm();
 			datRetourForm = candidature.getDatRetourForm();
-			datConfirmForm = getDateConfirmCandidat(candidature.getDatConfirmForm(), candidature.getDatNewConfirmCand());
+			datConfirmForm = candidature.getDatConfirmForm();
 			datJuryForm = candidature.getDatJuryForm();
 			datPubliForm = candidature.getDatPubliForm();
 		}
@@ -937,14 +922,14 @@ public class CandidatureController {
 
 	/** @param candidature
 	 * @return le nom de fichier de la lettre */
-	public String getNomFichierLettre(final Candidature candidature, final String mode, final String locale) {
+	public String getNomFichierLettre(final Candidature candidature, final String mode) {
 		String typeLettre = getTypeLettre(candidature, mode);
 		if (typeLettre != null && typeLettre.equals(ConstanteUtils.TEMPLATE_LETTRE_ADM)) {
 			return applicationContext.getMessage("candidature.lettre.file.adm", new Object[] {
 					candidature.getCandidat().getCompteMinima().getNumDossierOpiCptMin() + "_"
 							+ candidature.getCandidat().getNomPatCandidat() + "_"
 							+ candidature.getCandidat().getPrenomCandidat(),
-					candidature.getFormation().getCodForm()}, new Locale(locale != null ? locale : "fr"));
+					candidature.getFormation().getCodForm()}, UI.getCurrent().getLocale());
 		}
 		/* Lettre de refus */
 		else if (typeLettre != null && typeLettre.equals(ConstanteUtils.TEMPLATE_LETTRE_REFUS)) {
@@ -952,14 +937,14 @@ public class CandidatureController {
 					candidature.getCandidat().getCompteMinima().getNumDossierOpiCptMin() + "_"
 							+ candidature.getCandidat().getNomPatCandidat() + "_"
 							+ candidature.getCandidat().getPrenomCandidat(),
-					candidature.getFormation().getCodForm()}, new Locale(locale != null ? locale : "fr"));
+					candidature.getFormation().getCodForm()}, UI.getCurrent().getLocale());
 		}
 		return "";
 	}
 
 	/** @param candidature
 	 * @return l'inputstream pour le telechargement de la lettre */
-	public InputStream downloadLettre(final Candidature candidature, final String mode, final String locale, final Boolean sendNotification) {
+	public InputStream downloadLettre(final Candidature candidature, final String mode) {
 		String templateLettre = getTypeLettre(candidature, mode);
 		if (templateLettre == null) {
 			return null;
@@ -974,7 +959,7 @@ public class CandidatureController {
 		String adresseCommission = adresseController.getLibelleAdresse(commission.getAdresse(), "\n");
 
 		/* Les dates utiles */
-		String dateConfirm = MethodUtils.formatDate(getDateConfirmCandidat(candidature), formatterDate);
+		String dateConfirm = MethodUtils.formatDate(formation.getDatConfirmForm(), formatterDate);
 		String dateJury = MethodUtils.formatDate(formation.getDatJuryForm(), formatterDate);
 
 		String libAvis = "";
@@ -987,7 +972,7 @@ public class CandidatureController {
 			dateValidAvis = MethodUtils.formatDate(typeDecisionCand.getDatValidTypeDecCand(), formatterDate);
 
 			// libellé de l'avis
-			libAvis = i18nController.getI18nTraduction(typeDecisionCand.getTypeDecision().getI18nLibTypDec(), locale);
+			libAvis = i18nController.getI18nTraduction(typeDecisionCand.getTypeDecision().getI18nLibTypDec());
 			// motif pour un avis défavorable
 			if (typeDecisionCand.getMotivationAvis() != null
 					&& templateLettre.equals(ConstanteUtils.TEMPLATE_LETTRE_REFUS)) {
@@ -1000,24 +985,23 @@ public class CandidatureController {
 			}
 		}
 
-		ExportLettreCandidat data = new ExportLettreCandidat(cptMin.getNumDossierOpiCptMin(), candidat.getCivilite().getLibCiv(), candidat.getNomPatCandidat(), candidat.getNomUsuCandidat(), candidat.getPrenomCandidat(), formatterDate.format(candidat.getDatNaissCandidat()), adresseCandidat, campagneController.getLibelleCampagne(cptMin.getCampagne(), locale), commission.getLibComm(), adresseCommission, formation.getCodForm(), formation.getLibForm(), commission.getSignataireComm(), libAvis, commentaire, motif, dateConfirm, dateJury, dateValidAvis);
+		ExportLettreCandidat data = new ExportLettreCandidat(cptMin.getNumDossierOpiCptMin(), candidat.getCivilite().getLibCiv(), candidat.getNomPatCandidat(), candidat.getNomUsuCandidat(), candidat.getPrenomCandidat(), formatterDate.format(candidat.getDatNaissCandidat()), adresseCandidat, campagneController.getLibelleCampagne(cptMin.getCampagne()), commission.getLibComm(), adresseCommission, formation.getCodForm(), formation.getLibForm(), commission.getSignataireComm(), libAvis, commentaire, motif, dateConfirm, dateJury, dateValidAvis);
 
 		InputStream fichierSignature = null;
 		if (commission.getFichier() != null) {
 			fichierSignature = fileController.getInputStreamFromFichier(commission.getFichier());
 		}
 
-		return generateLettre(templateLettre, data, fichierSignature, locale, sendNotification);
+		return generateLettre(templateLettre, data, fichierSignature);
 	}
 
 	/** @param templateLettre
 	 * @param data
 	 * @param fichierSignature
-	 * @param locale
 	 * @return l'inputstram de la lettre */
 	public InputStream generateLettre(final String templateLettre, final ExportLettreCandidat data,
-			final InputStream fichierSignature, final String locale, final Boolean sendNotification) {
-		InputStream template = MethodUtils.getXDocReportTemplate(templateLettre, locale, cacheController.getLangueDefault().getCodLangue());
+			final InputStream fichierSignature) {
+		InputStream template = MethodUtils.getXDocReportTemplate(templateLettre, i18nController.getLangueCandidat(), cacheController.getLangueDefault().getCodLangue());
 		if (template == null) {
 			return null;
 		}
@@ -1058,18 +1042,15 @@ public class CandidatureController {
 			Options options = Options.getTo(ConverterTypeTo.PDF).via(ConverterTypeVia.XWPF);
 
 			report.convert(context, options, out);
-			return signaturePdfManager.signPdf(out, new Locale(locale != null ? locale : "fr"));
+
+			return signaturePdfManager.signPdf(out);
 		} catch (Exception e) {
 			// probleme de taille de signature XDocConverterException + StackOverflowError
 			if (e.getClass() != null && e instanceof XDocConverterException && e.getCause() != null
 					&& e.getCause() instanceof StackOverflowError) {
-				if (sendNotification) {
-					Notification.show(applicationContext.getMessage("candidature.lettre.download.sign.error", null, UI.getCurrent().getLocale()), Type.WARNING_MESSAGE);
-				}
+				Notification.show(applicationContext.getMessage("candidature.lettre.download.sign.error", null, UI.getCurrent().getLocale()), Type.WARNING_MESSAGE);
 			} else {
-				if (sendNotification) {
-					Notification.show(applicationContext.getMessage("candidature.lettre.download.error", null, UI.getCurrent().getLocale()), Type.WARNING_MESSAGE);
-				}
+				Notification.show(applicationContext.getMessage("candidature.lettre.download.error", null, UI.getCurrent().getLocale()), Type.WARNING_MESSAGE);
 				logger.error("erreur a la création de la lettre", e);
 			}
 
@@ -1526,7 +1507,7 @@ public class CandidatureController {
 			ut.setDestinationFileName(fileName);
 			ut.setDestinationStream(out);
 			ut.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
-			is = signaturePdfManager.signPdf(out, UI.getCurrent().getLocale());
+			is = signaturePdfManager.signPdf(out);
 			return new OnDemandFile(fileName, is);
 		} catch (Exception e) {
 			try {
@@ -1537,7 +1518,7 @@ public class CandidatureController {
 				ut.setDestinationFileName(fileName);
 				ut.setDestinationStream(out);
 				ut.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
-				is = signaturePdfManager.signPdf(out, UI.getCurrent().getLocale());
+				is = signaturePdfManager.signPdf(out);
 				Notification.show(applicationContext.getMessage("candidature.download.error.pj", null, UI.getCurrent().getLocale()), Type.WARNING_MESSAGE);
 				return new OnDemandFile(fileName, is);
 			} catch (Exception e2) {

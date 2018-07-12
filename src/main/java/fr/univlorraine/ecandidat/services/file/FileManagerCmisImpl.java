@@ -41,7 +41,6 @@ import org.apache.chemistry.opencmis.commons.enums.BindingType;
 import org.apache.chemistry.opencmis.commons.enums.UnfileObject;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
-import org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -257,7 +256,7 @@ public class FileManagerCmisImpl implements FileManager {
 	}
 
 	/** Vérifie si l'arborescence demandée existe, sinon, la créé
-	 *
+	 * 
 	 * @param candidature
 	 * @param isPjCommune
 	 * @return le folder folderCandidat/CodCamp/NumDossierOpiCptMin/CodFor
@@ -339,11 +338,7 @@ public class FileManagerCmisImpl implements FileManager {
 			Document d = master.createDocument(properties, contentStream, versioningState);
 			return getFileFromDoc(d, filename, prefixe);
 		} catch (Exception e) {
-			// Suppression de l'erreur org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException: Bad Gateway
-			if (!MethodUtils.checkExceptionAndMessage(e, CmisRuntimeException.class, ConstanteUtils.CMIS_ERROR_BAD_GATEWAY)) {
-				logger.error("Stockage de fichier - CMIS : erreur de creation du fichier ", e);
-			}
-
+			logger.error("Stockage de fichier - CMIS : erreur de creation du fichier ", e);
 			throw new FileException(applicationContext.getMessage("file.error.create", null, UI.getCurrent().getLocale()), e);
 		} finally {
 			MethodUtils.closeRessource(bis);
