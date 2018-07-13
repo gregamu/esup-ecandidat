@@ -256,7 +256,7 @@ public class FileManagerCmisImpl implements FileManager {
 	}
 
 	/** Vérifie si l'arborescence demandée existe, sinon, la créé
-	 * 
+	 *
 	 * @param candidature
 	 * @param isPjCommune
 	 * @return le folder folderCandidat/CodCamp/NumDossierOpiCptMin/CodFor
